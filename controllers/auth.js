@@ -1,19 +1,21 @@
 const User = require("../models/User");
 const { StatusCodes } = require("http-status-codes");
 const { BadRequestError } = require("../errors");
+const bcrypt = require("bcryptjs");
+
 const login = async (req, res, next) => {
   res.send("Login User");
 };
 
 const register = async (req, res, next) => {
-  // // This is unnesasary because Mongoose already cheks if there are validation errors.
-  // // There will be some cases that we will validate things in the controller but this is not one of them.
-  // const { name, email, password } = req.body;
-  // if (!name || !email || !password) {
-  //   throw new BadRequestError("Please provide name, email and password!");
-  // }
-  // const user = await User.create({ ...req.body });
-  const user = await User.create({ ...req.body });
+  const { name, email, password } = req.body;
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  const tempUser = { name, email, password: hashedPassword };
+
+  const user = await User.create({ ...tempUser });
   res.status(StatusCodes.CREATED).json({ user });
 };
 
